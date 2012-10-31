@@ -3,14 +3,12 @@ import re
 
 import tornado.web
 import utils
-from pychartbeat.permissions.constants import ApiPermissions
 
 class DocHandler(tornado.web.RequestHandler):
     """
     Automatically outputs documentation for the applications handlers
     using the docstring of each handler.
     """
-    perm = ApiPermissions.private
     @staticmethod
     def _get_helper(application,
         handlers=None,

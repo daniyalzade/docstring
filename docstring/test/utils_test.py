@@ -1,6 +1,6 @@
 import unittest
 
-from pychartbeat.docstring.utils import Pydoc
+from docstring.utils import Pydoc
 
 doc = """
     Return list of spikes for given host

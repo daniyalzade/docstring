@@ -1,14 +1,13 @@
-from django.core.urlresolvers import resolve
-from django.http import HttpResponse
 import functools
 
-import utils
+from docstring import utils
 
 def get_api_doc(request):
     """
     @param request: HttpRequest
     @return: str, html
     """
+    from django.core.urlresolvers import resolve
     f, args, kwars = resolve(request.path)
     endpoint = utils.Endpoint(f.__doc__, request.path)
 
@@ -28,6 +27,7 @@ class document(object):
         self._param = param
 
     def __call__(self, fn):
+        from django.http import HttpResponse
         @functools.wraps(fn)
         def wrapped_f(*args, **kwargs):
             request = args[0]
