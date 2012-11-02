@@ -1,6 +1,6 @@
 import unittest
 
-from docstring.utils import Pydoc
+from docstring.utils import Endpoint
 
 doc = """
     Return list of spikes for given host
@@ -16,14 +16,26 @@ doc = """
     the start|end.
     @param human: bool|None
 """
-class TestUrlUtils(unittest.TestCase):
-    def test_pydoc(self):
-        pydoc = Pydoc(doc)
-        pydoc.remove_all(['_id', 'human'])
-        docstring = pydoc.to_docstring()
-        self.assertTrue(not 'human' in docstring)
-        self.assertTrue(not '_id' in docstring)
+class TestEndpoint(unittest.TestCase):
+    def test_base_endpoint(self):
+        endpoint = Endpoint(doc, '/hello/')
+        self.assertEquals('/hello/?doc=1&foo=bar', endpoint.get_link_path(
+                request_path='/',
+                params={'foo': 'bar'},
+                ))
+        self.assertEquals('/hello/', endpoint.get_display_path(
+                request_path='/',
+                ))
 
+    def test_api_endpoint(self):
+        endpoint = Endpoint(doc, '/hello/')
+        self.assertEquals('/hello/?doc=1&foo=bar', endpoint.get_link_path(
+                request_path='/hello?doc=1',
+                params={'foo': 'bar'},
+                ))
+        self.assertEquals('/hello/', endpoint.get_display_path(
+                request_path='/hello?doc=1',
+                ))
 if __name__ == "__main__":
     unittest.main()
 

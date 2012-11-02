@@ -28,8 +28,6 @@ class DocHandler(tornado.web.RequestHandler):
         classes = [h.__class__ for h in handlers] if handlers else None
         server_name = server_name or application.settings.get('server_name', "")
         endpoints = []
-        request_path = request.path if request else ''
-        request_query = request.query if request else ''
         for url in urls:
             if classes and not url.handler_class in classes:
                 continue
@@ -37,13 +35,13 @@ class DocHandler(tornado.web.RequestHandler):
                 continue
             if url.handler_class.__name__ == DocHandler.__name__:
                 continue
-            path = url.regex.pattern.replace('$', '').replace('.*?', '')
-            path = re.sub(r'^/', r'', path)
-            endpoint = utils.Endpoint(url.handler_class.__doc__, path)
+            endpoint = utils.Endpoint(
+                    url.handler_class.__doc__,
+                    url.regex.pattern,
+                    )
             endpoints.append(endpoint)
         return utils.get_api_doc(endpoints, server_name,
-                request_path=request_path,
-                request_query=request_query,
+                request_url=request.full_url(),
                 )
 
     def get(self, classses=None):

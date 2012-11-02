@@ -9,6 +9,4 @@ __author__ = 'Eytan Daniyalzade'
 __license__ = 'ISC'
 
 from utils import Endpoint
-from utils import Pydoc
 from utils import get_api_doc
-

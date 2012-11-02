@@ -4,28 +4,38 @@ import tornado.web
 from docstring.tornadodoc import DocHandler
 from docstring.tornadodoc import document
 
-class ByeHandler(tornado.web.RequestHandler):
-    """
-    Returns a 'bye <name>' response.
+class _NameHandler(tornado.web.RequestHandler):
+    def _get_name(self):
+        first = self.get_argument('first', 'foo')
+        last = self.get_argument('last', 'bar')
+        return first + " " + last
 
-    @param name: str, [default: 'foo']
+class ByeHandler(_NameHandler):
     """
+    Returns a 'bye <first> <last>' response.
 
+    @see: ?first=eytan&last=daniyalzade
+
+    @param first: str, [default: 'foo']
+    @param last: str, [default: 'foo']
+    """
     @document()
     def get(self):
-        name = self.get_argument('name', 'foo')
+        name = self._get_name()
         self.write("Bye %s" % name)
 
-class HelloHandler(tornado.web.RequestHandler):
+class HelloHandler(_NameHandler):
     """
-    Returns a 'hello <name>' response.
+    Returns a 'hello <first> <last>' response.
 
-    @param name: str, [default: 'foo']
+    @see: ?first=eytan&last=daniyalzade
+
+    @param first: str, [default: 'foo']
+    @param last: str, [default: 'foo']
     """
-
     @document()
     def get(self):
-        name = self.get_argument('name', 'foo')
+        name = self._get_name()
         self.write("Hello %s" % name)
 
 application = tornado.web.Application([
@@ -35,5 +45,7 @@ application = tornado.web.Application([
 ], debug=True)
 
 if __name__ == "__main__":
-    application.listen(8888)
+    port = 8888
+    print "listening to %s" % port
+    application.listen(port)
     tornado.ioloop.IOLoop.instance().start()
