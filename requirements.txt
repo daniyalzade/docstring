@@ -1,1 +1,8 @@
+# These libraries are not required for docstring module, but for testing and
+# running examples.
+#
+# -- testing --
 nose
+# -- examples --
+tornado=2.4
+django==1.4.1
