@@ -1,3 +1,4 @@
+import os
 import re
 import urllib
 from urlparse import urlparse
@@ -97,30 +98,74 @@ class Endpoint(object):
                 clean=clean,
                 params=params,
                 )
-        print display_path
         return display_path
 
-    def get_doc(self, request_path):
+    def get_description(self):
+        """
+        @return: str
+        """
+        docstring = self._docstring.strip()
+        pattern = re.compile(r'([^@]*)', re.MULTILINE)
+        match = re.search(pattern, docstring)
+        if not match:
+            return ''
+        # Hack for now. Ideally we should not need any Example:
+        description = match.group(1)
+        description = description.replace('Examples:', '')
+        return description.strip()
+
+    def get_params(self):
+        """
+        @return: str
+        """
+        docstring = self._docstring.strip()
+        doc = docstring.replace('\n', '<br/>\n')
+        pattern = re.compile(r'@param ([^:]+?):([^@]*)', re.MULTILINE)
+        matches = re.findall(pattern, doc)
+        doc = ''
+        for m in matches:
+            doc += "<span class='param'>%s</span>:%s" % (m[0], m[1])
+        return doc
+
+    def get_example_url(self, request_path):
         """
         @param request_path: str
         @return: str
         """
-        if not self._docstring:
-            return ""
-        docstring = self._docstring.strip()
-        link_path = self.get_link_path(request_path, clean=False)
-        display_path = self.get_display_path(request_path, clean=False)
-        doc = ""
-        doc = docstring.replace('\n', '<br/>\n')
-        doc = re.sub(r'@param ([^:]+):', r'<span class="param">\1</span>:', doc)
         pattern = r'@see: ([^\n]+)<br/>'
+        doc = self._docstring.strip().replace('\n', '<br/>\n')
         match = re.search(pattern, doc)
         if not match:
-            return doc
+            return ''
         example_params = _parse_params(match.group(1))
+        display_path = self.get_display_path(request_path, clean=False)
+        link_path = self.get_link_path(request_path, clean=False)
         link_path = _append_params(link_path, example_params)
         display_path = _append_params(display_path, example_params)
-        doc = re.sub(pattern, r"<span class='link'><a href='%s'>%s</a></span><br/>" % (link_path, display_path), doc)
+        return "<span><a href='%s'>%s</a></span><br/>" % (link_path, display_path)
+
+    def get_doc(self, request_path, request_params):
+        """
+        @param request_path: str
+        @param request_parmams: dict
+        @return: str
+        """
+        if not self._docstring:
+            return ''
+        link_path = self.get_link_path(
+                request_path,
+                params=dict(
+                    request_params,
+                    doc=1,
+                    ),
+                )
+        display_path = self.get_display_path(request_path)
+        doc = '<tr>'
+        doc += '<td><a href="%s">%s</a></td>' % (link_path, display_path)
+        doc += "<td>%s</td>" % self.get_description()
+        doc += "<td>%s</td>" % self.get_params()
+        doc += "<td>%s</td>" % self.get_example_url(request_path)
+        doc += '</tr>'
         return doc
 
 def get_api_doc(endpoints, title, request_url, doc_param=None):
@@ -133,46 +178,18 @@ def get_api_doc(endpoints, title, request_url, doc_param=None):
     request_params = _parse_params(request_url)
     request_path = urlparse(request_url)[2]
     out = []
-    out.append('<html>')
-    out.append('<head>')
-    out.append('  <title>%s</title>' % title)
-    out.append(""" <style type="text/css">
-    .param {
-        font-weight: bold;
-        margin-right: 20px;
-    }
-    .link {
-        margin-left: 20px;
-    }
-    </style>""")
-    out.append('<link href="http://twitter.github.com/bootstrap/assets/css/bootstrap.css" rel="stylesheet">')
-    out.append('</head>')
-    out.append('<body>')
-    if title:
-        out.append('<h2>%s</h2>' % title)
-    out.append('<table class="table table-bordered table-striped">')
-    out.append('<thead>')
-    out.append('<tr>')
-    out.append('<th>url</th>')
-    out.append('<th>description</th>')
-    out.append('</tr>')
-    out.append('</thead>')
-    out.append('<tbody>')
+    fname = os.path.join(os.path.dirname(__file__), 'base.html')
+    style_fname = os.path.join(os.path.dirname(__file__), 'style.css')
+    base_template = open(fname).read()
+    style = open(style_fname).read()
+    rows = []
     for endpoint in endpoints:
-        link_path = endpoint.get_link_path(
-                request_path,
-                params=dict(
-                    request_params,
-                    doc=1,
-                    ),
-                )
-        display_path = endpoint.get_display_path(request_path)
-        docs = endpoint.get_doc(request_path)
-        out.append('<td><a href="%s">%s</a></td>' % (link_path, display_path))
-        out.append('<td>%s</td>' % docs)
-        out.append('</tr>')
-    out.append('</tbody>')
-    out.append('</body>')
-    out.append('</html>')
-    return ('\n'.join(out))
+        rows.append(endpoint.get_doc(request_path, request_params))
+    rows = ('\n'.join(rows))
+    out = base_template % {
+        'title': title or 'no title',
+        'rows': rows,
+        'style': style,
+        }
+    return out
 

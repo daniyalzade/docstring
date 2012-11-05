@@ -36,6 +36,21 @@ class TestEndpoint(unittest.TestCase):
         self.assertEquals('/hello/', endpoint.get_display_path(
                 request_path='/hello/',
                 ))
+
+    def test_get_description(self):
+        endpoint = Endpoint(doc, '/hello/')
+        description = endpoint.get_description()
+        self.assertEquals(
+                'Return list of spikes for given host',
+                description,
+                )
+
+    def test_get_params(self):
+        endpoint = Endpoint(doc, '/hello/')
+        params = endpoint.get_params()
+        print params
+
+
 if __name__ == "__main__":
     unittest.main()
 
