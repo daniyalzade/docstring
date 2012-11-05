@@ -19,7 +19,7 @@ class ByeHandler(_NameHandler):
     @param first: str, [default: 'foo']
     @param last: str, [default: 'foo']
     """
-    @document()
+    @document(server_name='Bye Endpoint')
     def get(self):
         name = self._get_name()
         self.write("Bye %s" % name)
@@ -33,7 +33,7 @@ class HelloHandler(_NameHandler):
     @param first: str, [default: 'foo']
     @param last: str, [default: 'foo']
     """
-    @document()
+    @document(server_name='Hello Endpoint')
     def get(self):
         name = self._get_name()
         self.write("Hello %s" % name)
@@ -49,7 +49,7 @@ application = tornado.web.Application([
     (r"/hello/.*", HelloHandler),
     (r"/bye/.*", ByeHandler),
     (r"/.+", OtherHandler),
-    (r"/", DocHandler),
+    (r"/", DocHandler, {'server_name': 'My Name Server'}),
 ], debug=True)
 
 if __name__ == "__main__":
