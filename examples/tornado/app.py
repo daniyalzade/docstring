@@ -38,9 +38,17 @@ class HelloHandler(_NameHandler):
         name = self._get_name()
         self.write("Hello %s" % name)
 
+class OtherHandler(tornado.web.RequestHandler):
+    """
+    Returns a 404ish response
+    """
+    def get(self):
+        self.write("This is not what you are looking for! 404!")
+
 application = tornado.web.Application([
-    (r"/hello", HelloHandler),
-    (r"/bye", ByeHandler),
+    (r"/hello/.*", HelloHandler),
+    (r"/bye/.*", ByeHandler),
+    (r"/.+", OtherHandler),
     (r"/", DocHandler),
 ], debug=True)
 

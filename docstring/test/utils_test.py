@@ -19,7 +19,7 @@ doc = """
 class TestEndpoint(unittest.TestCase):
     def test_base_endpoint(self):
         endpoint = Endpoint(doc, '/hello/')
-        self.assertEquals('/hello/?doc=1&foo=bar', endpoint.get_link_path(
+        self.assertEquals('/hello/?foo=bar', endpoint.get_link_path(
                 request_path='/',
                 params={'foo': 'bar'},
                 ))
@@ -29,12 +29,12 @@ class TestEndpoint(unittest.TestCase):
 
     def test_api_endpoint(self):
         endpoint = Endpoint(doc, '/hello/')
-        self.assertEquals('/hello/?doc=1&foo=bar', endpoint.get_link_path(
-                request_path='/hello?doc=1',
+        self.assertEquals('/hello/?foo=bar', endpoint.get_link_path(
+                request_path='/hello/',
                 params={'foo': 'bar'},
                 ))
         self.assertEquals('/hello/', endpoint.get_display_path(
-                request_path='/hello?doc=1',
+                request_path='/hello/',
                 ))
 if __name__ == "__main__":
     unittest.main()

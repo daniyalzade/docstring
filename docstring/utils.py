@@ -48,43 +48,6 @@ def _append_params(url, params):
     to_return = urlunparse(url_parts)
     return to_return
 
-class Pydoc(object):
-    def __init__(self, docstring):
-        """
-        @param docstring: str
-        """
-        self._docstring = docstring
-
-    def to_html(self):
-        pass
-
-    def remove_all(self, params):
-        """
-        @param params: list(str)
-        @return: Pydoc
-        """
-        for param in params:
-            pattern = r"@param %s: .*?@param" % param
-            # Do a multiline match (re.M) and do not treat \n as a special
-            # character (re.S)
-            pattern = re.compile(pattern, flags=re.M|re.S)
-            self._docstring = re.sub(pattern, '@param', self._docstring)
-            # Unfortunate hack to handle @param being the last line
-            pattern = r"@param %s: .*" % param
-            pattern = re.compile(pattern, flags=re.M|re.S)
-            self._docstring = re.sub(pattern, '', self._docstring)
-        return self
-
-    def remove(self, param):
-        """
-        @param params: str
-        @return: Pydoc
-        """
-        return self.remove_all([param])
-
-    def to_docstring(self):
-        return self._docstring
-
 class Endpoint(object):
     def __init__(self, docstring, mount_regex):
         """
@@ -96,12 +59,18 @@ class Endpoint(object):
 
     def _get_path(self, request_path=None, clean=False, params={}):
         """
-        @param path: str
+        @param request_path: str, this should just be path, with no parameters
         @param clean: bool
         @param params: dict
         """
-        path = self._mount_regex.replace('$', '').replace('.*?', '')
-        path = re.sub(r'^/', r'', path)
+        # Remove the regex pieces in the mount path. This is quite hacky
+        # to do, but no other option. In essence, we are trying to find a
+        # path that matches the given regex.
+        path = (self._mount_regex.
+                replace('$', '').
+                replace('.*?', '').
+                replace('.*', '')
+                )
         if not clean:
             path = _append_params(path, params)
         return path
@@ -111,13 +80,11 @@ class Endpoint(object):
         @param request_path: str
         @return: str
         """
-        params['doc'] = 1
         link_path = self._get_path(
                 request_path=request_path,
                 clean=clean,
                 params=params,
                 )
-        print link_path
         return link_path
 
     def get_display_path(self, request_path, clean=False, params={}):
@@ -143,11 +110,17 @@ class Endpoint(object):
         docstring = self._docstring.strip()
         link_path = self.get_link_path(request_path, clean=False)
         display_path = self.get_display_path(request_path, clean=False)
-        print link_path, display_path, 'in doc'
         doc = ""
         doc = docstring.replace('\n', '<br/>\n')
         doc = re.sub(r'@param ([^:]+):', r'<span class="param">\1</span>:', doc)
-        doc = re.sub(r'@see: ([^\n]+)<br/>', r"<span class='link'><a href='%s\1'>%s\1</a></span><br/>" % (link_path, display_path), doc)
+        pattern = r'@see: ([^\n]+)<br/>'
+        match = re.search(pattern, doc)
+        if not match:
+            return doc
+        example_params = _parse_params(match.group(1))
+        link_path = _append_params(link_path, example_params)
+        display_path = _append_params(display_path, example_params)
+        doc = re.sub(pattern, r"<span class='link'><a href='%s'>%s</a></span><br/>" % (link_path, display_path), doc)
         return doc
 
 def get_api_doc(endpoints, title, request_url, doc_param=None):
@@ -188,7 +161,10 @@ def get_api_doc(endpoints, title, request_url, doc_param=None):
     for endpoint in endpoints:
         link_path = endpoint.get_link_path(
                 request_path,
-                params=request_params,
+                params=dict(
+                    request_params,
+                    doc=1,
+                    ),
                 )
         display_path = endpoint.get_display_path(request_path)
         docs = endpoint.get_doc(request_path)
