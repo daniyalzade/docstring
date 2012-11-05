@@ -21,14 +21,6 @@ You can see the code `here <https://github.com/daniyalzade/docstring>`_
 
 TODO
 ----
-* Bring back the pydoc abstraction, and parse the docstring via that. 
-
-
 * Figure out if we can remove the dependency to django and tornado
-* Package it so that it works with absolute import
-* Fix endpoint parsing
-* Get the tests to use travis
 * Make sure that we can get the API permissions to work
-* Add an exmple application
 * Add entries for read the docs
-
