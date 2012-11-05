@@ -5,6 +5,12 @@ import tornado.web
 import utils
 
 class DocHandler(tornado.web.RequestHandler):
+    def initialize(self, server_name=None):
+        """
+        @param server_name: str, server_name to use for base handler.
+        """
+        self._server_name = server_name
+
     """
     Automatically outputs documentation for the applications handlers
     using the docstring of each handler.
@@ -45,20 +51,26 @@ class DocHandler(tornado.web.RequestHandler):
                 )
 
     def get(self, classses=None):
-        self.write(self._get_helper(self.application, request=self.request))
+        self.write(self._get_helper(
+            self.application,
+            request=self.request,
+            server_name=self._server_name,
+            ))
 
 class document(object):
     """
     Decorator to add to the tornado get method to get documentation out
     of it.
     """
-    def __init__(self, param='doc'):
+    def __init__(self, param='doc', server_name=None):
         """
         @param param: str|None, if param in the url request, return
         documentation. Otherwise, go with the normal get method. If param=None
         return documentation if there are no parameters in the request.
+        @param server_name: str, server_name to use for handler.
         """
         self._param = param
+        self._server_name = server_name
 
     def __call__(self, fn):
         @functools.wraps(fn)
@@ -66,7 +78,9 @@ class document(object):
             handler = args[0]
             if ((self._param and handler.get_argument(self._param, None)) or
                     (not self._param and not handler.request.arguments)):
-                server_name = None
+                server_name = self._server_name
+                # Remove passing server_name via get_server_name method.
+                # This value should just come from the decorator
                 if hasattr(handler, 'get_server_name'):
                     server_name = handler.get_server_name()
                 handler.write(DocHandler._get_helper(handler.application,
