@@ -19,8 +19,8 @@ setup(
     data_files=[
         ('', ['README.rst', 'LICENSE']),
         ('docstring', [
-            'docstring/*.html',
-            'docstring/*.css',
+            'docstring/base.html',
+            'docstring/style.css',
             ]),
         ],
     package_dir={
