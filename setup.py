@@ -16,7 +16,22 @@ setup(
     description='Decorators for auto-generating HTML response for API endpoints',
     long_description=open('README.rst').read(),
     version=docstring.__version__,
-    data_files=[('', ['README.rst', 'LICENSE'])],
+    data_files=[
+        ('', ['README.rst', 'LICENSE']),
+        ('docstring', [
+            'docstring/*.html',
+            'docstring/*.css',
+            ]),
+        ],
+    package_dir={
+        'docstring': 'docstring'
+        },
+    package_data={
+        'docstring': [
+            '*.html',
+            '*.css',
+            ],
+        },
     license=open('LICENSE').read(),
     install_requires=requires,
     include_package_data=True,
