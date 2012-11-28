@@ -7,6 +7,12 @@
   margin-left: 20px;
 }
 
+.back {
+  float: left;
+  font-weight: bold;
+  padding-top: 20px;
+}
+
 body {
   font-family: "proxima-nova";
   color: #484849;

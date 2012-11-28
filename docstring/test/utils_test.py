@@ -19,41 +19,31 @@ doc = """
 class TestEndpoint(unittest.TestCase):
     def test_base_endpoint(self):
         endpoint = Endpoint(doc, '/hello/')
-        self.assertEquals('/hello/?foo=bar', endpoint.get_link_path(
+        self.assertEquals('./hello/?foo=bar', endpoint.get_link_path(
                 request_path='/',
                 params={'foo': 'bar'},
                 ))
-        self.assertEquals('/hello/', endpoint.get_display_path(
+        self.assertEquals('./hello/', endpoint.get_display_path(
                 request_path='/',
                 ))
 
     def test_api_endpoint(self):
         endpoint = Endpoint(doc, '/hello/')
-        self.assertEquals('/hello/?foo=bar', endpoint.get_link_path(
+        self.assertEquals('./?foo=bar', endpoint.get_link_path(
                 request_path='/hello/',
                 params={'foo': 'bar'},
                 ))
-        self.assertEquals('/hello/', endpoint.get_display_path(
+        self.assertEquals('./', endpoint.get_display_path(
                 request_path='/hello/',
-                ))
-
-    def test_mounted_api_endpoint(self):
-        endpoint = Endpoint(doc, '/hello/')
-        self.assertEquals('/mount/path/hello/?foo=bar', endpoint.get_link_path(
-                request_path='/mount/path/hello/',
-                params={'foo': 'bar'},
-                ))
-        self.assertEquals('/mount/path/hello/', endpoint.get_display_path(
-                request_path='/mount/path/hello/',
                 ))
 
     def test_mounted_base_endpoint(self):
         endpoint = Endpoint(doc, '/hello/')
-        self.assertEquals('/mount/path/hello/?foo=bar', endpoint.get_link_path(
+        self.assertEquals('./hello/?foo=bar', endpoint.get_link_path(
                 request_path='/mount/path/',
                 params={'foo': 'bar'},
                 ))
-        self.assertEquals('/mount/path/hello/', endpoint.get_display_path(
+        self.assertEquals('./hello/', endpoint.get_display_path(
                 request_path='/mount/path/',
                 ))
 

@@ -64,24 +64,25 @@ class Endpoint(object):
         @param clean: bool
         @param params: dict
         """
+        match = re.search("(%s)" % self._mount_regex, request_path)
+        use_relative = bool(match)
+        if use_relative:
+            return _append_params('./', params) if not clean else './'
+
         # Remove the regex pieces in the mount path. This is quite hacky
         # to do, but no other option. In essence, we are trying to find a
         # path that matches the given regex.
-        match = re.search("(%s)" % self._mount_regex, request_path)
-        mount_path = request_path
-        if match:
-            mount_path = request_path.replace(match.group(1), '')
-
         path = (self._mount_regex.
                 replace('$', '').
                 replace('.*?', '').
                 replace('.*', '')
                 )
+        if path.startswith('/'):
+            path = path[1:]
+        path = './' + path
         if not clean:
             path = _append_params(path, params)
-        if mount_path.endswith('/') and path.startswith('/'):
-            mount_path = mount_path[:-1]
-        return mount_path + path
+        return path
 
     def get_link_path(self, request_path, clean=False, params={}):
         """
@@ -175,7 +176,10 @@ class Endpoint(object):
         doc += '</tr>'
         return doc
 
-def get_api_doc(endpoints, title, request_url, doc_param=None):
+def get_api_doc(endpoints, title, request_url,
+        doc_param=None,
+        is_root=False,
+        ):
     """
     @param endpoints: list(Endpoint)
     @param title: str
@@ -193,10 +197,14 @@ def get_api_doc(endpoints, title, request_url, doc_param=None):
     for endpoint in endpoints:
         rows.append(endpoint.get_doc(request_path, request_params))
     rows = ('\n'.join(rows))
+    back = ''
+    if not is_root:
+        back = "<a href='../?doc=1' class='back'>(back)</a>"
     out = base_template % {
         'title': title or 'no title',
         'rows': rows,
         'style': style,
+        'back': back,
         }
     return out
 

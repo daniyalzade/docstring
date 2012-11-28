@@ -20,6 +20,7 @@ class DocHandler(tornado.web.RequestHandler):
         handlers=None,
         server_name=None,
         request=None,
+        is_root=False,
         ):
         """
         @param handlers: list(RequestHandler), list of handlers to limit
@@ -28,6 +29,7 @@ class DocHandler(tornado.web.RequestHandler):
         @param server_name: str, will be used as the title in the generated
         HTML.
         @param request: HTTPRequest|None
+        @param is_root: bool
         @return: str
         """
         urls = application.handlers[0][1]
@@ -48,6 +50,7 @@ class DocHandler(tornado.web.RequestHandler):
             endpoints.append(endpoint)
         return utils.get_api_doc(endpoints, server_name,
                 request_url=request.full_url(),
+                is_root=is_root,
                 )
 
     def get(self, classses=None):
@@ -55,6 +58,7 @@ class DocHandler(tornado.web.RequestHandler):
             self.application,
             request=self.request,
             server_name=self._server_name,
+            is_root=True,
             ))
 
 class document(object):
