@@ -67,6 +67,11 @@ class Endpoint(object):
         # Remove the regex pieces in the mount path. This is quite hacky
         # to do, but no other option. In essence, we are trying to find a
         # path that matches the given regex.
+        match = re.search("(%s)" % self._mount_regex, request_path)
+        mount_path = request_path
+        if match:
+            mount_path = request_path.replace(match.group(1), '')
+
         path = (self._mount_regex.
                 replace('$', '').
                 replace('.*?', '').
@@ -74,7 +79,9 @@ class Endpoint(object):
                 )
         if not clean:
             path = _append_params(path, params)
-        return path
+        if mount_path.endswith('/') and path.startswith('/'):
+            mount_path = mount_path[:-1]
+        return mount_path + path
 
     def get_link_path(self, request_path, clean=False, params={}):
         """

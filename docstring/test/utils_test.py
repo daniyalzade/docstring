@@ -37,6 +37,26 @@ class TestEndpoint(unittest.TestCase):
                 request_path='/hello/',
                 ))
 
+    def test_mounted_api_endpoint(self):
+        endpoint = Endpoint(doc, '/hello/')
+        self.assertEquals('/mount/path/hello/?foo=bar', endpoint.get_link_path(
+                request_path='/mount/path/hello/',
+                params={'foo': 'bar'},
+                ))
+        self.assertEquals('/mount/path/hello/', endpoint.get_display_path(
+                request_path='/mount/path/hello/',
+                ))
+
+    def test_mounted_base_endpoint(self):
+        endpoint = Endpoint(doc, '/hello/')
+        self.assertEquals('/mount/path/hello/?foo=bar', endpoint.get_link_path(
+                request_path='/mount/path/',
+                params={'foo': 'bar'},
+                ))
+        self.assertEquals('/mount/path/hello/', endpoint.get_display_path(
+                request_path='/mount/path/',
+                ))
+
     def test_get_description(self):
         endpoint = Endpoint(doc, '/hello/')
         description = endpoint.get_description()
