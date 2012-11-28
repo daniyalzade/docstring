@@ -1,60 +1,61 @@
 import functools
-import re
 
 import tornado.web
-import utils
+
+from docstring import utils
+
+
+def _get_helper(application,
+    handlers=None,
+    server_name=None,
+    request=None,
+    is_root=False,
+    ):
+    """
+    @param handlers: list(RequestHandler), list of handlers to limit
+    the documentation for. If not specified, documentation will be
+    generated for all handlers.
+    @param server_name: str, will be used as the title in the generated
+    HTML.
+    @param request: HTTPRequest|None
+    @param is_root: bool
+    @return: str
+    """
+    urls = application.handlers[0][1]
+    classes = [h.__class__ for h in handlers] if handlers else None
+    server_name = server_name or application.settings.get('server_name', "")
+    endpoints = []
+    for url in urls:
+        if classes and not url.handler_class in classes:
+            continue
+        if url.handler_class.__module__.startswith('tornado.'):
+            continue
+        if url.handler_class.__name__ == DocHandler.__name__:
+            continue
+        endpoint = utils.Endpoint(
+                url.handler_class.__doc__,
+                url.regex.pattern,
+                )
+        endpoints.append(endpoint)
+    return utils.get_api_doc(endpoints, server_name,
+            request_url=request.full_url(),
+            is_root=is_root,
+            )
+
 
 class DocHandler(tornado.web.RequestHandler):
-    def initialize(self, server_name=None):
+    def __init__(self, *args, **kwargs):
+        self._server_name = None
+        super(DocHandler, self).__init__(*args, **kwargs)
+
+    def initialize(self, **kwargs):
         """
         @param server_name: str, server_name to use for base handler.
         """
-        self._server_name = server_name
+        self._server_name = kwargs.get('server_name')
 
-    """
-    Automatically outputs documentation for the applications handlers
-    using the docstring of each handler.
-    """
-    @staticmethod
-    def _get_helper(application,
-        handlers=None,
-        server_name=None,
-        request=None,
-        is_root=False,
-        ):
-        """
-        @param handlers: list(RequestHandler), list of handlers to limit
-        the documentation for. If not specified, documentation will be
-        generated for all handlers.
-        @param server_name: str, will be used as the title in the generated
-        HTML.
-        @param request: HTTPRequest|None
-        @param is_root: bool
-        @return: str
-        """
-        urls = application.handlers[0][1]
-        classes = [h.__class__ for h in handlers] if handlers else None
-        server_name = server_name or application.settings.get('server_name', "")
-        endpoints = []
-        for url in urls:
-            if classes and not url.handler_class in classes:
-                continue
-            if url.handler_class.__module__.startswith('tornado.'):
-                continue
-            if url.handler_class.__name__ == DocHandler.__name__:
-                continue
-            endpoint = utils.Endpoint(
-                    url.handler_class.__doc__,
-                    url.regex.pattern,
-                    )
-            endpoints.append(endpoint)
-        return utils.get_api_doc(endpoints, server_name,
-                request_url=request.full_url(),
-                is_root=is_root,
-                )
-
-    def get(self, classses=None):
-        self.write(self._get_helper(
+    def get(self):
+        self.write(_get_helper(
             self.application,
             request=self.request,
             server_name=self._server_name,
@@ -87,7 +88,7 @@ class document(object):
                 # This value should just come from the decorator
                 if hasattr(handler, 'get_server_name'):
                     server_name = handler.get_server_name()
-                handler.write(DocHandler._get_helper(handler.application,
+                handler.write(_get_helper(handler.application,
                     handlers=[handler],
                     server_name=server_name,
                     request=handler.request,

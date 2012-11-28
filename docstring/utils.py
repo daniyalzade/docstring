@@ -42,7 +42,7 @@ def _append_params(url, params):
         if type(value) == unicode:
             value = value.encode('utf-8')
 
-        if not key in [k for (k, v) in to_append]:
+        if not key in [k for (k, _) in to_append]:
             to_append.append((key, value))
 
     url_parts[4] = urllib.urlencode(to_append)
@@ -58,12 +58,13 @@ class Endpoint(object):
         self._docstring = docstring
         self._mount_regex = mount_regex
 
-    def _get_path(self, request_path=None, clean=False, params={}):
+    def _get_path(self, request_path=None, clean=False, params=None):
         """
         @param request_path: str, this should just be path, with no parameters
         @param clean: bool
-        @param params: dict
+        @param params: dict|None
         """
+        params = params or {}
         match = re.search("(%s)" % self._mount_regex, request_path)
         use_relative = bool(match)
         if use_relative:
@@ -84,11 +85,13 @@ class Endpoint(object):
             path = _append_params(path, params)
         return path
 
-    def get_link_path(self, request_path, clean=False, params={}):
+    def get_link_path(self, request_path, clean=False, params=None):
         """
         @param request_path: str
+        @param params: dict|None
         @return: str
         """
+        params = params or {}
         link_path = self._get_path(
                 request_path=request_path,
                 clean=clean,
@@ -96,11 +99,13 @@ class Endpoint(object):
                 )
         return link_path
 
-    def get_display_path(self, request_path, clean=False, params={}):
+    def get_display_path(self, request_path, clean=False, params=None):
         """
         @param request_path: str
+        @param params: dict|None
         @return: str
         """
+        params = params or {}
         display_path = self._get_path(
                 request_path=request_path,
                 clean=clean,
@@ -176,10 +181,7 @@ class Endpoint(object):
         doc += '</tr>'
         return doc
 
-def get_api_doc(endpoints, title, request_url,
-        doc_param=None,
-        is_root=False,
-        ):
+def get_api_doc(endpoints, title, request_url, is_root=False):
     """
     @param endpoints: list(Endpoint)
     @param title: str
